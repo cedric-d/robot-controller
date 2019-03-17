@@ -13,33 +13,40 @@ import socketio
 
 class SignalingSession(socketio.AsyncClientNamespace):
     def __init__(self, url):
+        socketio.AsyncClientNamespace.__init__(self)
         self._sio = None
         self._url = url
 
     async def create(self):
         self._sio = socketio.AsyncClient()
+        self._sio.register_namespace(self)
         await self._sio.connect(self._url)
     
+    async def attach(self, room):
+        await self._sio.emit('create or join', room)
+    
+    
     async def on_created(self, data):
-        pass
+        print("on_created")
     
     async def on_full(self, data):
-        pass
+        print("on_full")
     
     async def on_join(self, data):
-        pass
+        print("on_join")
     
-    async def on_joined(self, data):
-        pass
+    async def on_joined(self, room, socketId):
+        print("Joined room {} using socket id {}".format(room, socketId))
     
     async def on_log(self, data):
-        pass
+        print(' '.join(data))
+    
     
     async def on_connect(self):
-        print("connection established")
+        print("Connection established")
     
     async def on_disconnect(self):
-        print("disconnected from server")
+        print("Disconnected from server")
     
     async def on_message(self, data):
         print("message received with ", data)
@@ -60,15 +67,15 @@ async def run(pc, player, session):
         pc.addTrack(VideoStreamTrack())
 
     # join video room
-    plugin = await session.attach('janus.plugin.videoroom')
-    await plugin.send({
-        'body': {
-            'display': 'aiortc',
-            'ptype': 'publisher',
-            'request': 'join',
-            'room': room,
-        }
-    })
+    plugin = await session.attach('Robot')
+#    await plugin.send({
+#        'body': {
+#            'display': 'aiortc',
+#            'ptype': 'publisher',
+#            'request': 'join',
+#            'room': room,
+#        }
+#    })
 
     # send offer
     await pc.setLocalDescription(await pc.createOffer())
